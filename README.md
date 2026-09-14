@@ -1,7 +1,7 @@
 # ASENet
 
 ASENet（Adversarial Sequential Expert Network）的 CTR 预估实验复现代码，对应论文
-`ASENet_paper_latex/ASENet.tex`。原始 26 个独立脚本已重构为共享包结构，**模型数值逻辑与
+`ASENet: Adversarial Sequential Expert Network for CTR Prediction`。原始 26 个独立脚本已重构为共享包结构，**模型数值逻辑与
 原始代码逐行一致**（原脚本归档于 `legacy/`）。
 
 ## 目录结构

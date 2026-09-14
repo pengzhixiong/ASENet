@@ -87,7 +87,7 @@ for key, value in raw_features_dict.items():
         else:
             _COLUMN_DEFAULTS.append(tf.constant("", dtype=value[1]))
 
-_SHUFFLE_SIZE = 10000
+_SHUFFLE_SIZE = 100000
 print("_CSV_COLUMNS：{}, _SELECT_COLUMNS:{}".format(_CSV_COLUMNS, _SELECT_COLUMNS), len(_CSV_COLUMNS),
       len(_SELECT_COLUMNS))
 

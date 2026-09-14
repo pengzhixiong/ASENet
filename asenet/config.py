@@ -1,10 +1,9 @@
 """特征表、数据集与模型的元信息配置。
 
 集中管理原来散布在 26 个脚本里的三样东西：
-1. 特征定义（`raw_features_dict`）—— 两个数据集各有独立词表，其中 Taobao 存在
-   「大词表 / 小词表」两套变体（影响 Hashing 桶数 → Embedding 表形状，必须严格保留）；
+1. 特征定义（`raw_features_dict`）—— 两个数据集各有独立词表；
 2. 数据集配置（label 列、文件路径、序列长度、序列/目标特征名）；
-3. 模型元信息（是否启用序列特征、Taobao 词表变体、shuffle 覆盖等）。
+3. 模型元信息（是否启用序列特征）。
 
 特征仍用 6 元组表示 `(vocab, dtype, dim, is_seq, used, desc)`，与原始 `raw_features_dict`
 的字段顺序完全一致，保证模型内 `spec[0..4]` 的索引语义不变。
@@ -19,6 +18,7 @@ Feature = namedtuple("Feature", "vocab dtype dim is_seq used desc")
 
 # --------------------------------------------------------------------------- #
 # 特征表（顺序与原始 raw_features_dict 严格一致）
+# 特征们的字典，存储格式为(最大编码数目，输入特征类型，嵌入维度，特征类型（0为单值，1为序列），是否在本模型中选用，特征含义描述)
 # --------------------------------------------------------------------------- #
 # Industrial 数据集：45 个特征。词表在所有模型间一致，仅序列特征 used 标志随模型变化。
 INDUSTRIAL_FEATURES = [
@@ -69,8 +69,8 @@ INDUSTRIAL_FEATURES = [
     ("is_click", 100, tf.float32, 8, 0, False, "is_click 是否点击"),
 ]
 
-# Taobao 数据集：21 个特征。默认采用「大词表」，另有 6 个特征在小词表变体中缩小。
-TAOBAO_FEATURES_LARGE = [
+# Taobao 数据集：21 个特征。
+TAOBAO_FEATURES = [
     ("clk", 10, tf.float32, 8, 0, False, "是否点击，训练的label"),
     ("btag_his", 10, tf.string, 8, 1, False, "行为类型序列，包括ipv/cart/fav/buy"),
     ("cate_his", 15000, tf.string, 8, 1, True, "历史点击广告商品的类别ID序列"),
@@ -94,16 +94,6 @@ TAOBAO_FEATURES_LARGE = [
     ("btag", 10, tf.string, 8, 0, False, "行为类型，包括ipv/cart/fav/buy"),
 ]
 
-# 小词表相对大词表的 vocab 覆盖（原实验中 DIN/DLF/DNN/GAN/HierDiffuse/QNN 使用小词表）。
-TAOBAO_SMALL_VOCAB = {
-    "userid": 1000000,
-    "adgroup_id": 800000,
-    "campaign_id": 400000,
-    "customer": 300000,
-    "brand": 150000,
-    "brand_his": 150000,
-}
-
 # 每个数据集会被静态模型（DNN/DeepFM/GAN）关闭的序列特征。
 _SEQ_FEATURES = {
     "industrial": ["search_cate_disp_list_30d", "search_seller_list_30d"],
@@ -111,18 +101,15 @@ _SEQ_FEATURES = {
 }
 
 
-def build_feature_dict(dataset, use_seq=True, taobao_vocab="large"):
+def build_feature_dict(dataset, use_seq=True):
     """构建与原始 raw_features_dict 顺序一致的 OrderedDict。
 
     :param dataset: 'industrial' | 'taobao'
     :param use_seq: 是否启用序列特征（静态模型传 False）
-    :param taobao_vocab: 'large' | 'small'（仅对 taobao 生效）
     """
-    rows = INDUSTRIAL_FEATURES if dataset == "industrial" else TAOBAO_FEATURES_LARGE
+    rows = INDUSTRIAL_FEATURES if dataset == "industrial" else TAOBAO_FEATURES
     feature_dict = OrderedDict()
     for name, vocab, dtype, dim, is_seq, used, desc in rows:
-        if dataset == "taobao" and taobao_vocab == "small" and name in TAOBAO_SMALL_VOCAB:
-            vocab = TAOBAO_SMALL_VOCAB[name]
         if not use_seq and name in _SEQ_FEATURES[dataset]:
             used = False
         feature_dict[name] = Feature(vocab, dtype, dim, is_seq, used, desc)
@@ -185,22 +172,21 @@ ASENET_SHARE_GROUPS = {
 # --------------------------------------------------------------------------- #
 # 模型元信息
 # --------------------------------------------------------------------------- #
-# use_seq: 是否启用序列特征；taobao_vocab: Taobao 词表变体；
-# industrial_shuffle: 覆盖 Industrial 数据集的 shuffle 大小（缺省用 default_shuffle）。
+# use_seq: 是否启用序列特征；
 MODELS = {
-    "dnn":         {"use_seq": False, "taobao_vocab": "small"},
-    "deepfm":      {"use_seq": False, "taobao_vocab": "large"},
-    "din":         {"use_seq": True,  "taobao_vocab": "small"},
-    "dien":        {"use_seq": True,  "taobao_vocab": "large"},
-    "dmr":         {"use_seq": True,  "taobao_vocab": "large"},
-    "final":       {"use_seq": True,  "taobao_vocab": "large", "industrial_shuffle": 10000},
-    "twin":        {"use_seq": True,  "taobao_vocab": "large", "industrial_shuffle": 10000},
-    "mirrn":       {"use_seq": True,  "taobao_vocab": "large", "industrial_shuffle": 10000},
-    "gan":         {"use_seq": False, "taobao_vocab": "small"},
-    "qnn":         {"use_seq": True,  "taobao_vocab": "small"},
-    "dlf":         {"use_seq": True,  "taobao_vocab": "small"},
-    "hierdiffuse": {"use_seq": True,  "taobao_vocab": "small"},
-    "asenet":      {"use_seq": True,  "taobao_vocab": "large", "industrial_shuffle": 10000},
+    "dnn":         {"use_seq": False},
+    "deepfm":      {"use_seq": False},
+    "din":         {"use_seq": True},
+    "dien":        {"use_seq": True},
+    "dmr":         {"use_seq": True},
+    "final":       {"use_seq": True},
+    "twin":        {"use_seq": True},
+    "mirrn":       {"use_seq": True},
+    "gan":         {"use_seq": False},
+    "qnn":         {"use_seq": True},
+    "dlf":         {"use_seq": True},
+    "hierdiffuse": {"use_seq": True},
+    "asenet":      {"use_seq": True},
 }
 
 # 属于 GAN 体系的模型（走 GAN 训练 + 生成器导出路径）。
@@ -249,7 +235,7 @@ def build_context(dataset, model):
     meta = MODELS[model]
 
     feature_dict = build_feature_dict(
-        dataset, use_seq=meta["use_seq"], taobao_vocab=meta.get("taobao_vocab", "large")
+        dataset, use_seq=meta["use_seq"]
     )
 
     shuffle_size = ds["default_shuffle"]
