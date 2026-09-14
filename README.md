@@ -12,7 +12,7 @@ ASENet/
 ├── Industrial_*.py           # 28 个薄封装脚本（保留原运行方式）
 ├── Taobao_*.py
 ├── asenet/
-│   ├── config.py             # 特征表 / 数据集 / 模型元信息（含 Taobao 两套词表变体）
+│   ├── config.py             # 特征表 / 数据集 / 模型元信息
 │   ├── data.py               # CSV 数据加载与标签读取
 │   ├── evaluate.py           # AUC / Logloss / PCOC 计算
 │   ├── serve.py              # serving 签名与模型保存
@@ -184,17 +184,11 @@ L_G = α · L_CTR + L_Adv           # α = 20.0
 
 重构时严格保留了原实验中的非直观差异（这些差异会影响结果，故未做“统一”）：
 
-- **Taobao 两套词表大小**（影响 Hashing 桶数 → Embedding 形状）：大词表用于
-  `asenet/dien/dmr/deepfm/final/mirrn/twin`，小词表用于 `din/dlf/dnn/gan/hierdiffuse/qnn`。
 - **序列特征启用**：静态模型 `dnn/deepfm/gan` 关闭序列特征。
 - **序列/目标特征名映射**与**序列长度**（Industrial=20 / Taobao=50，短期 5 / 10）。
-- **`_SHUFFLE_SIZE`**：Industrial 的 `asenet/final/twin/mirrn` 为 10000，其余 100000。
 - **`price` 特征处理**：仅 Taobao 存在；不同模型处理方式不同（哈希嵌入 / 原始数值 / 跳过）。
-- 模型内部的已知怪癖（如 ASENet 跳过 price、DNN 序列分隔符为 `,`、QNN 的 SE Loss、
-  FINAL 的跨 block 蒸馏）均按原样保留。
 
 ## 环境说明
 
 - **Python 3.9**，**TensorFlow 2.8**（另需 scikit-learn / numpy，见 `requirements.txt`）。
 - 数据与模型输出路径硬编码在 `asenet/config.py` 的 `DATASETS` 中，可按需修改。
-- 本机未安装 TensorFlow 与实验数据，无法真实跑训练；请在有数据/环境机器上运行以复现论文指标。

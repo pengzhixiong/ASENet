@@ -130,7 +130,7 @@ class PengHashNN(keras.Model):
         features_recons = {}
         for key in self._features_dict.keys():
             if self._features_dict[key][3] == 1:
-                features_recons[key] = tf.strings.split(tf.reshape(inputs.get(key), [-1]), sep=',')
+                features_recons[key] = tf.strings.split(tf.reshape(inputs.get(key), [-1]), sep='^')
             else:
                 features_recons[key] = tf.reshape(inputs.get(key), [-1])
         return features_recons
