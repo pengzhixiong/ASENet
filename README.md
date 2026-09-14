@@ -192,3 +192,12 @@ L_G = α · L_CTR + L_Adv           # α = 20.0
 
 - **Python 3.9**，**TensorFlow 2.8**（另需 scikit-learn / numpy，见 `requirements.txt`）。
 - 数据与模型输出路径硬编码在 `asenet/config.py` 的 `DATASETS` 中，可按需修改。
+
+## 数据集
+### 淘宝数据集
+- 数据来源： https://tianchi.aliyun.com/dataset/dataDetail?dataId=56
+- 下载地址： https://huggingface.co/datasets/reczoo/TaobaoAd_x1/tree/main
+- 注：本代码中为了加快训练速度，对训练集(train.csv)的负样本做了50%的随机采样，然后从训练集随机切出10%的样本作为验证集(valid.csv)，测试集(test.csv)保持原样。
+
+### 工业数据集
+由于隐私限制，目前尚未开源，待后续脱敏处理后公开。
