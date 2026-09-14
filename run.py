@@ -8,6 +8,12 @@ import argparse
 
 from asenet.config import DATASETS, MODELS
 from asenet.runner import run_model
+import numpy as np
+import os
+import tensorflow as tf
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"  # 禁用GPU，只使用CPU
+np.random.seed(42)
+tf.random.set_seed(42)
 
 
 def main():
